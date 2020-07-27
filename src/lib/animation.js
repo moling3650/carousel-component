@@ -1,35 +1,37 @@
 export class Timeline {
 
   constructor (animations) {
-    this.animations = animations || [];
+    this.animations = new Set();
     this.requestID = null;
     this.state = 'inited';
     this.startTime = null;
     this.pauseTime = null;
     this.tick = () => {
       const t = Date.now() - this.startTime;
-      const animations = this.animations.filter(a => !a.finished);
 
-      animations.forEach(animation => {
-        animation.move(t);
-      })
-      this.requestID = requestAnimationFrame(this.tick);
+      for (const animation of this.animations) {        
+        const completed = animation.move(t);
+        if (completed) {
+          this.animations.delete(animation);
+        }
+      }
+      this.requestID = (this.animations.size) ? requestAnimationFrame(this.tick) : null;
     }
   }
 
   add(animation, addTime) {
-    animation.finished = false;
+    this.animations.add(animation);
     if (this.state === 'playing') {
       animation.addTime = addTime !== void 0 ? addTime : Date.now() - this.startTime;
+      this.tick()
     } else {
       animation.addTime = addTime !== void 0 ? addTime : 0;
     }
-    this.animations.push(animation);
   }
 
   clear() {
     this.pause()
-    this.animations = [];
+    this.animations.clear();
     this.requestID = null;
     this.state = 'inited';
     this.startTime = null;
@@ -47,9 +49,6 @@ export class Timeline {
 
   restart() {
     this.pause();
-    this.animations.forEach(animation => {
-      animation.finished = false
-    })
     this.requestID = null;
     this.state = 'playing';
     this.startTime = Date.now();
@@ -86,20 +85,17 @@ export class Animation {
     this.delay = delay;
     this.timingFunction = timingFunction;
     this.template = template;
-    this.finished = false;
     this.addTime = 0
   }
 
   computeProgression(t) {
-    let progression = this.timingFunction((t - this.delay - this.addTime) / this.duration);
     if (t < this.delay + this.addTime) {
       return 0;
+    } else if (t > this.duration + this.delay + this.addTime) {
+      return 1;
+    } else {
+      return this.timingFunction((t - this.delay - this.addTime) / this.duration);
     }
-    if (t > this.duration + this.delay + this.addTime) {
-      progression = 1;
-      this.finished = true;
-    }
-    return progression;
   }
 
   move(t) {
@@ -108,5 +104,6 @@ export class Animation {
       const value = this.start + progression * (this.end - this.start);
       this.object[this.property] = this.template(value);
     }
+    return progression === 1;
   }
 }
