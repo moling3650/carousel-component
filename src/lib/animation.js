@@ -50,15 +50,6 @@ export class Timeline {
     this.tick();
   }
 
-  restart() {
-    this.pause();
-    this.requestID = null;
-    this.state = 'playing';
-    this.startTime = Date.now();
-    this.pauseTime = null;
-    this.tick();
-  }
-
   pause() {
     if (this.state !== 'playing') {
       return;
