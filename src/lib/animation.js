@@ -31,7 +31,7 @@ export class Timeline {
     }
   }
 
-  clear() {
+  reset() {
     this.pause()
     this.animations.clear();
     this.animationStartTimes.clear();
