@@ -13,9 +13,7 @@ export class Timeline {
       animations.forEach(animation => {
         animation.move(t);
       })
-      if (animations.length) {
-        this.requestID = requestAnimationFrame(this.tick);
-      }
+      this.requestID = requestAnimationFrame(this.tick);
     }
   }
 

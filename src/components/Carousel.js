@@ -3,15 +3,17 @@ import { Timeline, Animation } from "../lib/animation";
 import { cubicBezier } from "../lib/cubicBezier";
 import { enableGesture } from "../lib/gusture";
 
-const ease = cubicBezier(.17, .67, .83, .67)
+const ease = cubicBezier(.25, 1, .25, 1);
+const linear = cubicBezier(0, 0, 1, 1);
 
 export class Carousel {
   constructor(interval = 3000) {
     this.images = [];
     this.position = 0;
-    this.timeline = new Timeline();
     this.timer = null;
     this.interval = interval;
+    this.timeline = new Timeline();
+    this.timeline.start();
   }
 
   get lastPosition() {
@@ -50,12 +52,10 @@ export class Carousel {
       next.style.transform = `translateX(${nextStart}%)`;
 
       this.timer = setTimeout(() => {
-        this.timeline.clear()
         const a1 = new Animation(current.style, 'transform', currentStart, currentStart - 100, 500, 0, ease, v => `translateX(${v}%)`);
         const a2 = new Animation(next.style, 'transform', nextStart, nextStart - 100, 500, 0, ease, v => `translateX(${v}%)`);
         this.timeline.add(a1);
         this.timeline.add(a2);
-        this.timeline.start();
 
         this.position = this.nextPosition;
       }, 16);
