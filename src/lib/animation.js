@@ -92,6 +92,9 @@ export class Animation {
 
   computeProgression(t) {
     let progression = this.timingFunction((t - this.delay - this.addTime) / this.duration);
+    if (t < this.delay + this.addTime) {
+      return 0;
+    }
     if (t > this.duration + this.delay + this.addTime) {
       progression = 1;
       this.finished = true;
@@ -101,8 +104,9 @@ export class Animation {
 
   move(t) {
     let progression = this.computeProgression(t);
-
-    const value = this.start + progression * (this.end - this.start);
-    this.object[this.property] = this.template(value);
+    if (progression > 0) {      
+      const value = this.start + progression * (this.end - this.start);
+      this.object[this.property] = this.template(value);
+    }
   }
 }
