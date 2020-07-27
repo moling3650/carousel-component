@@ -2,36 +2,39 @@ export class Timeline {
 
   constructor (animations) {
     this.animations = new Set();
+    this.animationStartTimes = new Map();
     this.requestID = null;
     this.state = 'inited';
     this.startTime = null;
     this.pauseTime = null;
     this.tick = () => {
-      const t = Date.now() - this.startTime;
-
+      const time = Date.now() - this.startTime;
+      
       for (const animation of this.animations) {        
-        const completed = animation.move(t);
+        const completed = animation.move(time, this.animationStartTimes.get(animation));
         if (completed) {
           this.animations.delete(animation);
+          this.animationStartTimes.delete(animation);
         }
       }
       this.requestID = (this.animations.size) ? requestAnimationFrame(this.tick) : null;
     }
   }
 
-  add(animation, addTime) {
+  add(animation, startTime) {
     this.animations.add(animation);
     if (this.state === 'playing') {
-      animation.addTime = addTime !== void 0 ? addTime : Date.now() - this.startTime;
+      this.animationStartTimes.set(animation, startTime !== void 0 ? startTime : Date.now() - this.startTime);
       this.tick()
     } else {
-      animation.addTime = addTime !== void 0 ? addTime : 0;
+      this.animationStartTimes.set(animation, startTime !== void 0 ? startTime : 0);
     }
   }
 
   clear() {
     this.pause()
     this.animations.clear();
+    this.animationStartTimes.clear();
     this.requestID = null;
     this.state = 'inited';
     this.startTime = null;
@@ -85,21 +88,20 @@ export class Animation {
     this.delay = delay;
     this.timingFunction = timingFunction;
     this.template = template;
-    this.addTime = 0
   }
 
-  computeProgression(t) {
-    if (t < this.delay + this.addTime) {
+  computeProgression(time, startTime) {
+    if (time < startTime + this.delay) {
       return 0;
-    } else if (t > this.duration + this.delay + this.addTime) {
+    } else if (time > startTime + this.delay + this.duration) {
       return 1;
     } else {
-      return this.timingFunction((t - this.delay - this.addTime) / this.duration);
+      return this.timingFunction((time - (startTime + this.delay)) / this.duration);
     }
   }
 
-  move(t) {
-    let progression = this.computeProgression(t);
+  move(time, startTime) {
+    let progression = this.computeProgression(time, startTime);
     if (progression > 0) {      
       const value = this.start + progression * (this.end - this.start);
       this.object[this.property] = this.template(value);
