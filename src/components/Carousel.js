@@ -9,7 +9,7 @@ export class Carousel {
   constructor(interval = 3000) {
     this.images = [];
     this.position = 0;
-    this.timer = null;
+    this.nextPicTimer = null;
     this.interval = interval;
     this.timeline = new Timeline();
     this.timeline.start();
@@ -34,8 +34,8 @@ export class Carousel {
 
       const onStart = () => {
         this.timeline.pause();
-        if (this.timer) {
-          clearTimeout(this.timer);
+        if (this.nextPicTimer) {
+          clearTimeout(this.nextPicTimer);
         }
         const carouselRect = children[pos].root.parentElement.getBoundingClientRect();
         const imageRect = children[pos].root.getBoundingClientRect();
@@ -53,10 +53,10 @@ export class Carousel {
         let last = children[this.lastPosition];
         let next = children[this.nextPosition];
         
-        const dx = detail.clientX - detail.startX + offsetX;
-        current.style.transform = `translateX(${dx - width * this.position}px)`;
-        last.style.transform = `translateX(${dx - width * this.lastPosition - width}px)`;
-        next.style.transform = `translateX(${dx - width * this.nextPosition + width}px)`;
+        const x = detail.clientX - detail.startX + offsetX;
+        current.style.transform = `translateX(${x - width * this.position}px)`;
+        last.style.transform = `translateX(${x - width * this.lastPosition - width}px)`;
+        next.style.transform = `translateX(${x - width * this.nextPosition + width}px)`;
       }
 
       const onPanEnd = ({ detail }) => {
@@ -92,7 +92,7 @@ export class Carousel {
         }
    
         this.position = (this.position - direction + this.images.length) % this.images.length;
-        this.timer = setTimeout(nextPic, this.interval);
+        this.nextPicTimer = setTimeout(nextPic, this.interval);
       }
 
       let element = <img src={url} enableGesture={true} onStart={onStart} onTap={onTap} onPan={onPan} onPanEnd={onPanEnd}/>;
@@ -101,8 +101,8 @@ export class Carousel {
     })
 
     let nextPic = () => {
-      if (this.timer) {
-        clearTimeout(this.timer);
+      if (this.nextPicTimer) {
+        clearTimeout(this.nextPicTimer);
       }
       if (this.timeline.state !== 'playing') {
         return;
@@ -116,7 +116,7 @@ export class Carousel {
       current.style.transform = `translateX(${currentStart}%)`;
       next.style.transform = `translateX(${nextStart}%)`;
 
-      this.timer = setTimeout(() => {
+      this.nextPicTimer = setTimeout(() => {
         const currentAnimation = new Animation(current.style, 'transform', currentStart, currentStart - 100, 500, 0, ease, v => `translateX(${v}%)`);
         const nextAnimation = new Animation(next.style, 'transform', nextStart, nextStart - 100, 500, 0, ease, v => `translateX(${v}%)`);
         this.timeline.add(currentAnimation);
@@ -125,7 +125,7 @@ export class Carousel {
         this.position = this.nextPosition;
       }, 16);
 
-      this.timer = setTimeout(nextPic, this.interval);
+      this.nextPicTimer = setTimeout(nextPic, this.interval);
     }
 
     setTimeout(nextPic, this.interval);
