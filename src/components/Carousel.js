@@ -60,10 +60,42 @@ export class Carousel {
       }
 
       const onPanEnd = ({ detail }) => {
-        console.log('panend');
+        const x = detail.clientX - detail.startX + offsetX;
+        let direction = 0;
+        if (detail.isFlick) {
+          direction = (detail.clientX - detail.startX > 0) ? 1 : -1;
+        } else if (x > (width / 2)) {
+          direction = 1;
+        } else if (x < -(width / 2)) {
+          direction = -1;
+        }
+        this.timeline.reset();
+        this.timeline.start();
+
+        let current = children[this.position];
+        let last = children[this.lastPosition];
+        let next = children[this.nextPosition];
+
+        const currentStart = x - width * this.position;
+        const lastStart = x - width * this.lastPosition - width;
+        const nextStart = x - width * this.nextPosition + width;
+
+        const template = value => `translateX(${value}px)`;
+        const currentAnimation = new Animation(current.style, 'transform', currentStart, currentStart + (width * direction - x), 500, 0, ease, template);
+        this.timeline.add(currentAnimation);
+        if (x > 0) {
+          const lastAnimation = new Animation(last.style, 'transform', lastStart, lastStart + (width * direction - x), 500, 0, ease, template);
+          this.timeline.add(lastAnimation);          
+        } else {
+          const nextAnimation = new Animation(next.style, 'transform', nextStart, nextStart + (width * direction - x), 500, 0, ease, template);
+          this.timeline.add(nextAnimation);
+        }
+   
+        this.position = (this.position - direction + this.images.length) % this.images.length;
+        this.timer = setTimeout(nextPic, this.interval);
       }
 
-      let element = <img src={url} enableGesture={true} onStart={() => onStart()} onTap={() => onTap()} onPan={e => onPan(e)} onPanEnd={(e) => onPanEnd(e)}/>;
+      let element = <img src={url} enableGesture={true} onStart={onStart} onTap={onTap} onPan={onPan} onPanEnd={onPanEnd}/>;
       element.addEventListener('dragstart', event => event.preventDefault());
       return element;
     })
@@ -85,10 +117,10 @@ export class Carousel {
       next.style.transform = `translateX(${nextStart}%)`;
 
       this.timer = setTimeout(() => {
-        const a1 = new Animation(current.style, 'transform', currentStart, currentStart - 100, 5000, 0, ease, v => `translateX(${v}%)`);
-        const a2 = new Animation(next.style, 'transform', nextStart, nextStart - 100, 5000, 0, ease, v => `translateX(${v}%)`);
-        this.timeline.add(a1);
-        this.timeline.add(a2);
+        const currentAnimation = new Animation(current.style, 'transform', currentStart, currentStart - 100, 500, 0, ease, v => `translateX(${v}%)`);
+        const nextAnimation = new Animation(next.style, 'transform', nextStart, nextStart - 100, 500, 0, ease, v => `translateX(${v}%)`);
+        this.timeline.add(currentAnimation);
+        this.timeline.add(nextAnimation);
 
         this.position = this.nextPosition;
       }, 16);
@@ -101,53 +133,6 @@ export class Carousel {
     const carousel = <div class='carousel'>
       {children}
     </div>;
-
-    carousel.addEventListener('panend', e => {
-      const width = carousel.root.getBoundingClientRect().width;
-      const offsetX = e.detail.clientX - e.detail.startX;
-      let offset = 0;
-
-      if (e.detail.isFlick || offsetX > (width / 2)) {
-        offset = 1;
-      } else if (e.detail.isFlick || offsetX < -(width / 2)) {
-        offset = -1;
-      }
-
-      let current = children[this.position];
-      let last = children[this.lastPosition];
-      let next = children[this.nextPosition];
-
-      const currentStart = offsetX - width * this.position;
-      const lastStart = offsetX - width * this.lastPosition - width;
-      const nextStart = offsetX - width * this.nextPosition + width;
-      let a1, a2;
-      if (offsetX > 0) {
-        // last & current
-        if (offset) {
-          a1 = new Animation(current.style, 'transform', currentStart, currentStart + (width - offsetX), 500, 0, ease, v => `translateX(${v}px)`);
-          a2 = new Animation(last.style, 'transform', lastStart, lastStart + (width - offsetX), 500, 0, ease, v => `translateX(${v}px)`);
-        } else {
-          a1 = new Animation(current.style, 'transform', currentStart, currentStart - offsetX, 500, 0, ease, v => `translateX(${v}px)`);
-          a2 = new Animation(last.style, 'transform', lastStart, lastStart - offsetX, 500, 0, ease, v => `translateX(${v}px)`);
-        }
-      } else {
-        // current & next
-        if (offset) {
-          a1 = new Animation(current.style, 'transform', currentStart, currentStart - (width + offsetX), 500, 0, ease, v => `translateX(${v}px)`);
-          a2 = new Animation(next.style, 'transform', nextStart, nextStart - (width + offsetX), 500, 0, ease, v => `translateX(${v}px)`);
-        } else {
-          a1 = new Animation(current.style, 'transform', currentStart, currentStart - offsetX, 500, 0, ease, v => `translateX(${v}px)`);
-          a2 = new Animation(next.style, 'transform', nextStart, nextStart - offsetX, 500, 0, ease, v => `translateX(${v}px)`);
-        }
-      }
-      this.timeline.clear();
-      this.timeline.add(a1);
-      this.timeline.add(a2);
-      this.timeline.start();
-
-      this.position = (this.position - offset + this.images.length) % this.images.length;
-      this.timer = setTimeout(nextPic, this.interval);
-    })
 
     return carousel;
   }
