@@ -1,3 +1,5 @@
+import { enableGesture } from './gusture';
+
 export function createElement(Cls, attributes, ...children) {
   const obj = (typeof Cls === 'string') ? new Element(Cls) : new Cls();
 
@@ -43,6 +45,13 @@ export class Element {
 
   setAttribute(name, value) {
     this.root.setAttribute(name, value);
+
+    if (name === 'enableGesture') {
+      enableGesture(this.root)
+    } else if (name.match(/^on(.+)$/)){
+      const eventName = RegExp.$1.toLocaleLowerCase();
+      this.addEventListener(eventName, value)
+    }
   }
 
   appendChild(child) {

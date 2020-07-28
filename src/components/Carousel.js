@@ -1,7 +1,6 @@
 import { createElement } from "../lib/createElement";
 import { Timeline, Animation } from "../lib/animation";
 import { cubicBezier } from "../lib/cubicBezier";
-import { enableGesture } from "../lib/gusture";
 
 const ease = cubicBezier(.25, 1, .25, 1);
 const linear = cubicBezier(0, 0, 1, 1);
@@ -30,7 +29,19 @@ export class Carousel {
 
   render() {
     let children = this.images.map(url => {
-      let element = <img src={url} />;
+      const onStart = () => {
+        console.log('start');
+      }
+      const onTap = () => {
+        console.log('tap');
+      }
+      const onPan = (event) => {
+        console.log('pan');
+      }
+      const onPanEnd = (event) => {
+        console.log('panend');
+      }
+      let element = <img src={url} enableGesture={true} onStart={() => onStart()} onTap={() => onTap()} onPan={() => onPan()} onPanEnd={() => onPanEnd()}/>;
       element.addEventListener('dragstart', event => event.preventDefault());
       return element;
     })
@@ -69,8 +80,6 @@ export class Carousel {
     const carousel = <div class='carousel'>
       {children}
     </div>;
-
-    enableGesture(carousel.root);
 
     carousel.addEventListener('pan', e => {
       if (this.timer) {
