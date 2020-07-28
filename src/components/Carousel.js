@@ -30,6 +30,7 @@ export class Carousel {
   render() {
     let children = this.images.map((url, pos) => {
       let offsetX = 0;
+      let width = 0;
 
       const onStart = () => {
         this.timeline.pause();
@@ -38,18 +39,31 @@ export class Carousel {
         }
         const carouselRect = children[pos].root.parentElement.getBoundingClientRect();
         const imageRect = children[pos].root.getBoundingClientRect();
+        width = carouselRect.width;
         offsetX = imageRect.x - carouselRect.x;
       }
+
       const onTap = () => {
         console.log('tap');
       }
-      const onPan = (event) => {
-        console.log('pan');
+
+      const onPan = ({ detail }) => {        
+        this.position = pos;
+        let current = children[this.position];
+        let last = children[this.lastPosition];
+        let next = children[this.nextPosition];
+        
+        const dx = detail.clientX - detail.startX + offsetX;
+        current.style.transform = `translateX(${dx - width * this.position}px)`;
+        last.style.transform = `translateX(${dx - width * this.lastPosition - width}px)`;
+        next.style.transform = `translateX(${dx - width * this.nextPosition + width}px)`;
       }
-      const onPanEnd = (event) => {
+
+      const onPanEnd = ({ detail }) => {
         console.log('panend');
       }
-      let element = <img src={url} enableGesture={true} onStart={() => onStart()} onTap={() => onTap()} onPan={() => onPan()} onPanEnd={() => onPanEnd()}/>;
+
+      let element = <img src={url} enableGesture={true} onStart={() => onStart()} onTap={() => onTap()} onPan={e => onPan(e)} onPanEnd={(e) => onPanEnd(e)}/>;
       element.addEventListener('dragstart', event => event.preventDefault());
       return element;
     })
@@ -87,22 +101,6 @@ export class Carousel {
     const carousel = <div class='carousel'>
       {children}
     </div>;
-
-    carousel.addEventListener('pan', e => {
-      if (this.timer) {
-        clearTimeout(this.timer);
-      }
-      this.timeline.pause();
-      const width = carousel.root.getBoundingClientRect().width;
-      const offsetX = e.detail.clientX - e.detail.startX;
-      let current = children[this.position];
-      let last = children[this.lastPosition];
-      let next = children[this.nextPosition];
-
-      current.style.transform = `translateX(${offsetX - width * this.position}px)`;
-      last.style.transform = `translateX(${offsetX - width * this.lastPosition - width}px)`;
-      next.style.transform = `translateX(${offsetX - width * this.nextPosition + width}px)`;
-    })
 
     carousel.addEventListener('panend', e => {
       const width = carousel.root.getBoundingClientRect().width;
