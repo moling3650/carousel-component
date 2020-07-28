@@ -28,9 +28,17 @@ export class Carousel {
   }
 
   render() {
-    let children = this.images.map(url => {
+    let children = this.images.map((url, pos) => {
+      let offsetX = 0;
+
       const onStart = () => {
-        console.log('start');
+        this.timeline.pause();
+        if (this.timer) {
+          clearTimeout(this.timer);
+        }
+        const carouselRect = children[pos].root.parentElement.getBoundingClientRect();
+        const imageRect = children[pos].root.getBoundingClientRect();
+        offsetX = imageRect.x - carouselRect.x;
       }
       const onTap = () => {
         console.log('tap');
@@ -63,8 +71,8 @@ export class Carousel {
       next.style.transform = `translateX(${nextStart}%)`;
 
       this.timer = setTimeout(() => {
-        const a1 = new Animation(current.style, 'transform', currentStart, currentStart - 100, 500, 0, ease, v => `translateX(${v}%)`);
-        const a2 = new Animation(next.style, 'transform', nextStart, nextStart - 100, 500, 0, ease, v => `translateX(${v}%)`);
+        const a1 = new Animation(current.style, 'transform', currentStart, currentStart - 100, 5000, 0, ease, v => `translateX(${v}%)`);
+        const a2 = new Animation(next.style, 'transform', nextStart, nextStart - 100, 5000, 0, ease, v => `translateX(${v}%)`);
         this.timeline.add(a1);
         this.timeline.add(a2);
 
@@ -75,7 +83,6 @@ export class Carousel {
     }
 
     setTimeout(nextPic, this.interval);
-    this.timeline.start();
 
     const carousel = <div class='carousel'>
       {children}
