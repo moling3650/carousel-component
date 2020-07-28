@@ -17,7 +17,9 @@ export class Timeline {
           this.animationStartTimes.delete(animation);
         }
       }
-      this.requestID = (this.animations.size) ? requestAnimationFrame(this.tick) : null;
+      if (this.state === 'playing') {        
+        this.requestID = (this.animations.size) ? requestAnimationFrame(this.tick) : null;
+      }
     }
   }
 
