@@ -44,6 +44,7 @@ export class Element {
   }
 
   setAttribute(name, value) {
+    this[name] = value
     this.root.setAttribute(name, value);
 
     if (name === 'enableGesture') {
