@@ -16,6 +16,10 @@ const config = {
             ]
           }
         }
+      },
+      {
+        test: /\.css$/,
+        use: require.resolve('./css-loader.js')
       }
     ]
   },
